@@ -1,0 +1,50 @@
+diff --git a/node_modules/react-native/React/Fabric/Mounting/ComponentViews/View/RCTViewComponentView.mm b/node_modules/react-native/React/Fabric/Mounting/ComponentViews/View/RCTViewComponentView.mm
+index 5bf655356b..ebe083e5be 100644
+--- a/node_modules/react-native/React/Fabric/Mounting/ComponentViews/View/RCTViewComponentView.mm
++++ b/node_modules/react-native/React/Fabric/Mounting/ComponentViews/View/RCTViewComponentView.mm
+@@ -88,6 +88,7 @@
+   NSArray* _focusDestinations;
+   id<UIFocusItem> _previouslyFocusedItem;
+   RCTSwiftUIContainerViewWrapper *_swiftUIWrapper;
++  BOOL _shouldFocusOnMount;
+ }
+ 
+ #ifdef RCT_DYNAMIC_FRAMEWORKS
+@@ -116,6 +117,8 @@
+     _tvParallaxProperties.pressMagnification = 1.0f;
+     _tvParallaxProperties.pressDuration = 0.3f;
+     _tvParallaxProperties.pressDelay = 0.0f;
++    
++    _shouldFocusOnMount = false;
+ #else
+     self.multipleTouchEnabled = YES;
+ #endif
+@@ -171,6 +174,15 @@
+ 
+ #pragma mark - Apple TV methods
+ 
++- (void)didMoveToWindow {
++  [super didMoveToWindow];
++
++  if (self->_shouldFocusOnMount) {
++    self->_shouldFocusOnMount = false;
++    [self focusSelf];
++  }
++}
++
+ - (RCTSurfaceHostingProxyRootView *)containingRootView
+ {
+   UIView *rootview = self;
+@@ -206,10 +218,8 @@
+   if (!focusedSync) {
+     // `focusSelf` function relies on `rootView` which may not be present on the first render.
+     // `focusSelf` fails and returns `false` in that case. We try re-executing the same action
+-    // by putting it to the main queue to make sure it runs after UI creation is completed.
+-    dispatch_async(dispatch_get_main_queue(), ^{
+-      [self focusSelf];
+-    });
++    // when the view has moved to the window. This is tracked by the `_shouldFocusOnMount` flag.
++    self->_shouldFocusOnMount = true;
+   }
+ }
+ 
