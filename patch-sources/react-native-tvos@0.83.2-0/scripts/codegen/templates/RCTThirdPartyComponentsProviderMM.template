@@ -1,0 +1,48 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+
+#import <Foundation/Foundation.h>
+
+#import "RCTThirdPartyComponentsProvider.h"
+#import <React/RCTComponentViewProtocol.h>
+
+#if __has_include(<React/RCTViewComponentView.h>)
+#import <React/RCTViewComponentView.h>
+#endif
+#if __has_include(<React/RCTImageComponentView.h>)
+#import <React/RCTImageComponentView.h>
+#endif
+
+@implementation RCTThirdPartyComponentsProvider
+
++ (NSDictionary<NSString *, Class<RCTComponentViewProtocol>> *)thirdPartyFabricComponents
+{
+  static NSDictionary<NSString *, Class<RCTComponentViewProtocol>> *thirdPartyComponents = nil;
+  static dispatch_once_t nativeComponentsToken;
+
+  dispatch_once(&nativeComponentsToken, ^{
+    NSDictionary *rawMap = @{
+{thirdPartyComponentsMapping}
+    };
+
+    NSMutableDictionary<NSString *, Class<RCTComponentViewProtocol>> *validComponents = [NSMutableDictionary new];
+    [rawMap enumerateKeysAndObjectsUsingBlock:^(NSString *key, id obj, BOOL *stop) {
+      if ([obj isKindOfClass:[NSNull class]]) {
+        NSLog(@"[RCTThirdPartyComponentsProvider] Skipping component '%@': class not found", key);
+      } else {
+        validComponents[key] = obj;
+      }
+    }];
+
+    thirdPartyComponents = [validComponents copy];
+   });
+
+  return thirdPartyComponents;
+}
+
+@end
