@@ -134,6 +134,8 @@ public class ReactScrollView extends ScrollView
   private int mFadingEdgeLengthStart;
   private int mFadingEdgeLengthEnd;
   private int mSnapToItemPadding;
+  private boolean mScrollAnimationEnabled = true;
+  private boolean mBlockScrollDelta = false;
 
   public ReactScrollView(Context context) {
     this(context, null);
@@ -358,6 +360,10 @@ public class ReactScrollView extends ScrollView
     mSnapToItemPadding = snapToItemPadding;
   }
 
+  public void setScrollAnimationEnabled(boolean scrollAnimationEnabled) {
+    mScrollAnimationEnabled = scrollAnimationEnabled;
+  }
+
   @Override
   protected float getTopFadingEdgeStrength() {
     float max = Math.max(mFadingEdgeLengthStart, mFadingEdgeLengthEnd);
@@ -562,7 +568,9 @@ public class ReactScrollView extends ScrollView
    * unblocks such customization.
    */
   protected void requestChildFocusWithoutScroll(View child, View focused) {
+    mBlockScrollDelta = true;
     super.requestChildFocus(child, focused);
+    mBlockScrollDelta = false;
   }
 
   private int getScrollDelta(View descendent) {
@@ -607,8 +615,20 @@ public class ReactScrollView extends ScrollView
   }
 
   @Override
+  public void computeScroll() {
+    if (!mScrollAnimationEnabled && mScroller != null && !mScroller.isFinished()) {
+      // When scroll animation is disabled, just abort any in-flight smooth scroll.
+      // The correct position has already been set synchronously by
+      // requestChildFocus → tryScrollSnapToChild/scrollToChild.
+      mScroller.forceFinished(true);
+      return;
+    }
+    super.computeScroll();
+  }
+
+  @Override
   protected int computeScrollDeltaToGetChildRectOnScreen(Rect rect) {
-    if (!mScrollEnabled) {
+    if (!mScrollEnabled || mBlockScrollDelta) {
       return 0;
     }
     return super.computeScrollDeltaToGetChildRectOnScreen(rect);
@@ -1362,7 +1382,11 @@ public class ReactScrollView extends ScrollView
    * scroll view and state. Calling raw `smoothScrollTo` doesn't update state.
    */
   public void reactSmoothScrollTo(int x, int y) {
-    ReactScrollViewHelper.smoothScrollTo(this, x, y);
+    if (mScrollAnimationEnabled) {
+      ReactScrollViewHelper.smoothScrollTo(this, x, y);
+    } else {
+      scrollTo(x, y);
+    }
     setPendingContentOffsets(x, y);
   }
 
