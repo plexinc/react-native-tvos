@@ -12,6 +12,12 @@ import {
 const scale = Dimensions.get('window').width / 1920;
 const px = (v: number) => v * scale;
 
+// Overlay chrome dimensions — mimicking an edge-to-edge app (e.g. Plex TV)
+// where the nav/tab bars sit on top of an underlying scroll surface.
+const NAV_BAR_HEIGHT = px(110);
+const TAB_BAR_HEIGHT = px(90);
+const SIDE_RAIL_WIDTH = px(120);
+
 const COLORS = [
   '#E74C3C',
   '#3498DB',
@@ -25,7 +31,6 @@ const COLORS = [
   '#C0392B',
 ];
 
-// A focusable card component
 const Card = ({
   label,
   width = 300,
@@ -67,21 +72,26 @@ const Card = ({
   );
 };
 
-// Section header
 const SectionHeader = ({ title }: { title: string }) => (
   <View style={{ marginBottom: px(16) }}>
     <Text style={{ fontSize: px(28), fontWeight: '600', color: '#e0e0e0' }}>{title}</Text>
   </View>
 );
 
-// Example 1: Horizontal scroll with snap align "start"
-const HorizontalExample = ({ align }) => (
+// Horizontal ScrollView whose own paddingLeft/paddingRight push content under
+// the side rails — exposes the snap-vs-padding bug on the horizontal axis for
+// every alignment.
+const PaddedHorizontalExample = ({ align }: { align: 'start' | 'center' | 'end' }) => (
   <View>
-    <SectionHeader title={`Horizontal — snapAlign: ${align}`} />
+    <SectionHeader title={`Horizontal — snapAlign: ${align} (padded)`} />
     <ScrollView
       horizontal
       scrollSnapType="mandatory"
       showsHorizontalScrollIndicator={false}
+      style={{
+        paddingLeft: SIDE_RAIL_WIDTH,
+        paddingRight: SIDE_RAIL_WIDTH,
+      }}
     >
       {Array.from({ length: 15 }, (_, i) => (
         <View key={i} scrollSnapAlign={align} style={{ marginRight: px(20) }}>
@@ -92,7 +102,6 @@ const HorizontalExample = ({ align }) => (
   </View>
 );
 
-// Example: Horizontal scroll with scrollPadding
 const ScrollPaddingExample = () => (
   <View>
     <SectionHeader title="Horizontal — snapAlign: start, scrollPadding: 60" />
@@ -112,8 +121,7 @@ const ScrollPaddingExample = () => (
   </View>
 );
 
-// Example: Vertical scroll with snap align
-const VerticalExample = ({ align }) => (
+const VerticalExample = ({ align }: { align: 'start' | 'center' | 'end' }) => (
   <View>
     <SectionHeader title={`Vertical — snapAlign: ${align}`} />
     <ScrollView
@@ -130,7 +138,6 @@ const VerticalExample = ({ align }) => (
   </View>
 );
 
-// Example 3: Nested — Vertical scroller with horizontal rows
 const NestedExample = () => (
   <View>
     <SectionHeader title="Nested — Vertical + Horizontal" />
@@ -141,41 +148,104 @@ const NestedExample = () => (
       contentContainerStyle={{ gap: px(40) }}
     >
       <View scrollSnapAlign="start">
-        <HorizontalExample align={'start'} />
+        <PaddedHorizontalExample align={'start'} />
       </View>
       <View scrollSnapAlign="start">
-        <HorizontalExample align={'center'} />
+        <PaddedHorizontalExample align={'center'} />
       </View>
     </ScrollView>
   </View>
 );
 
+// Translucent overlay nav bar — sits on top of the outer ScrollView. The
+// outer ScrollView has paddingTop equal to NAV_BAR_HEIGHT so content scrolls
+// underneath. When the snap-on-focus bug is present, focusing an item at the
+// top of the list lands it behind this bar.
+const TopNavBar = () => (
+  <View
+    pointerEvents="none"
+    style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: NAV_BAR_HEIGHT,
+      backgroundColor: 'rgba(10, 10, 25, 0.85)',
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: px(40),
+      gap: px(40),
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(255,255,255,0.1)',
+      zIndex: 10,
+    }}
+  >
+    <Text style={{ fontSize: px(26), fontWeight: '700', color: '#fff' }}>
+      Scroll Snap Demo
+    </Text>
+    {['Home', 'First Tab', 'Second Tab', 'Third Tab', 'Fourth Tab'].map((label) => (
+      <Text key={label} style={{ fontSize: px(22), color: 'rgba(255,255,255,0.7)' }}>
+        {label}
+      </Text>
+    ))}
+  </View>
+);
+
+// Bottom tab bar overlay — exposes the bug on the `end` anchor.
+const BottomTabBar = () => (
+  <View
+    pointerEvents="none"
+    style={{
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: TAB_BAR_HEIGHT,
+      backgroundColor: 'rgba(10, 10, 25, 0.85)',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-around',
+      paddingHorizontal: px(40),
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(255,255,255,0.1)',
+      zIndex: 10,
+    }}
+  >
+    {['First Button', 'Second Button', 'Third Button', 'Fourth Button'].map((label) => (
+      <Text key={label} style={{ fontSize: px(22), color: 'rgba(255,255,255,0.7)' }}>
+        {label}
+      </Text>
+    ))}
+  </View>
+);
+
 const App = () => {
   return (
-    <View style={{ flex: 1, backgroundColor: '#1a1a2e', paddingTop: px(60), paddingHorizontal: px(40) }}>
-      <Text style={{ fontSize: px(42), fontWeight: '700', color: '#ffffff', marginBottom: px(8) }}>
-        Scroll Snap Type Demo
-      </Text>
-
+    <View style={{ flex: 1, backgroundColor: '#1a1a2e' }}>
       <ScrollView
         scrollSnapType="mandatory"
         showsVerticalScrollIndicator={false}
-        style={{ flex: 1 }}
-        contentContainerStyle={{ gap: px(40) }}
+        style={{
+          flex: 1,
+          paddingTop: NAV_BAR_HEIGHT,
+          paddingBottom: TAB_BAR_HEIGHT,
+          paddingHorizontal: px(40),
+        }}
+        contentContainerStyle={{ gap: px(40), paddingBottom: px(40) }}
       >
         <View scrollSnapAlign="center" style={{ flexDirection: 'row', gap: px(16) }}>
           <VerticalExample align={'start'} />
           <VerticalExample align={'center'} />
           <VerticalExample align={'end'} />
         </View>
-        <View scrollSnapAlign="center">
-          <HorizontalExample align={'start'} />
+        <View scrollSnapAlign="start">
+          <PaddedHorizontalExample align={'start'} />
         </View>
         <View scrollSnapAlign="center">
-          <HorizontalExample align={'center'} />
+          <PaddedHorizontalExample align={'center'} />
         </View>
-        <View scrollSnapAlign="center">
-          <HorizontalExample align={'end'} />
+        <View scrollSnapAlign="end">
+          <PaddedHorizontalExample align={'end'} />
         </View>
         <View scrollSnapAlign="center">
           <ScrollPaddingExample />
@@ -184,6 +254,8 @@ const App = () => {
           <NestedExample />
         </View>
       </ScrollView>
+      <TopNavBar />
+      <BottomTabBar />
     </View>
   );
 };
