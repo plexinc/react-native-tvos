@@ -79,6 +79,19 @@ constructor(private val fpsListener: FpsListener? = null) :
   public override fun createViewInstance(context: ThemedReactContext): ReactHorizontalScrollView =
       ReactHorizontalScrollView(context, fpsListener)
 
+  // Forward Yoga padding to the native view so scroll-snap math reads the
+  // actual ScrollView padding. See ReactScrollViewManager.setPadding.
+  override fun setPadding(
+      view: ReactHorizontalScrollView,
+      left: Int,
+      top: Int,
+      right: Int,
+      bottom: Int,
+  ) {
+    view.setPadding(left, top, right, bottom)
+    view.clipToPadding = false
+  }
+
   override fun updateState(
       view: ReactHorizontalScrollView,
       props: ReactStylesDiffMap,

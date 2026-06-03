@@ -573,7 +573,8 @@ public class ReactHorizontalScrollView extends HorizontalScrollView
     int maxScrollX = Math.max(0, computeHorizontalScrollRange() - getWidth());
 
     Integer targetOffset = ReactScrollViewHelper.computeScrollSnapOffset(
-        rect.left, rect.right, viewportWidth, alignment, mSnapInterval, mScrollPadding, maxScrollX);
+        rect.left, rect.right, viewportWidth, alignment, mSnapInterval, mScrollPadding,
+        getPaddingLeft(), maxScrollX);
     if (targetOffset == null) {
       return false;
     }

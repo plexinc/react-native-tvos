@@ -606,10 +606,14 @@ public object ReactScrollViewHelper {
    *
    * @param focusedStart the start coordinate of the snap target in scroll view coordinates
    * @param focusedEnd the end coordinate of the snap target in scroll view coordinates
-   * @param viewportSize the visible viewport size on the scroll axis
+   * @param viewportSize the visible viewport size on the scroll axis (excludes padding)
    * @param alignment the scrollSnapAlign value ("start", "center", or "end")
    * @param snapInterval the snap interval (0 if not set)
    * @param scrollPadding the scroll padding value
+   * @param paddingStart the ScrollView's padding on the leading edge of the scroll axis
+   *     (paddingTop for vertical, paddingLeft for horizontal). Subtracted from the target
+   *     so the focused item lands inside the padded viewport instead of behind the padding,
+   *     which matters when the ScrollView has padding to clear an overlay nav bar.
    * @param maxScrollOffset the maximum scroll offset for clamping
    */
   @JvmStatic
@@ -620,13 +624,14 @@ public object ReactScrollViewHelper {
       alignment: String,
       snapInterval: Int,
       scrollPadding: Int,
+      paddingStart: Int,
       maxScrollOffset: Int,
   ): Int? {
     val focusedCenter = (focusedStart + focusedEnd) / 2
     var targetOffset = when (alignment) {
-      "start" -> focusedStart - scrollPadding
-      "center" -> focusedCenter - (viewportSize / 2) + (scrollPadding / 2)
-      "end" -> focusedEnd - viewportSize + scrollPadding
+      "start" -> focusedStart - paddingStart - scrollPadding
+      "center" -> focusedCenter - paddingStart - (viewportSize / 2) + (scrollPadding / 2)
+      "end" -> focusedEnd - paddingStart - viewportSize + scrollPadding
       else -> return null
     }
     if (snapInterval > 0) {

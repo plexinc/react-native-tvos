@@ -13,8 +13,8 @@ set -e
 # because it applies patches relative to the project root.
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PACKAGE_NAME="react-native-tvos@0.83.2-0"
-PATCH_FILE="$PROJECT_ROOT/patches/react-native+0.83.2-0.patch"
+PACKAGE_NAME="react-native-tvos@0.83.6-0"
+PATCH_FILE="$PROJECT_ROOT/patches/react-native+0.83.6-0.patch"
 PATCH_SOURCE_DIR="$PROJECT_ROOT/patch-sources/${PACKAGE_NAME}"
 NODE_MODULES_PREFIX="node_modules/react-native"
 
@@ -39,8 +39,8 @@ trap "rm -rf $TEMP_DIR" EXIT
 
 echo -e "${YELLOW}Step 1:${NC} Downloading clean package from npm..."
 
-(cd "$TEMP_DIR" && npm pack react-native-tvos@0.83.2-0 --quiet > /dev/null 2>&1)
-(cd "$TEMP_DIR" && tar -xzf react-native-tvos-0.83.2-0.tgz)
+(cd "$TEMP_DIR" && npm pack react-native-tvos@0.83.6-0 --quiet > /dev/null 2>&1)
+(cd "$TEMP_DIR" && tar -xzf react-native-tvos-0.83.6-0.tgz)
 CLEAN_DIR="$TEMP_DIR/package"
 
 if [ ! -d "$CLEAN_DIR" ]; then

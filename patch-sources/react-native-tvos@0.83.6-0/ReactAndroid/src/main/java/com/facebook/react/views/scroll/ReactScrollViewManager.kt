@@ -77,6 +77,16 @@ constructor(private val fpsListener: FpsListener? = null) :
 
   override fun getName(): String = REACT_CLASS
 
+  // Forward Yoga padding to the native view so scroll-snap math (and any other
+  // consumer of getPaddingTop/Left/Right/Bottom) reads the actual ScrollView
+  // padding. Default ViewManager.setPadding is a no-op, which leaves
+  // getPaddingTop() at 0 even when the user sets style.paddingTop — that breaks
+  // snap-on-focus against an overlay nav bar.
+  override fun setPadding(view: ReactScrollView, left: Int, top: Int, right: Int, bottom: Int) {
+    view.setPadding(left, top, right, bottom)
+    view.clipToPadding = false
+  }
+
   public override fun createViewInstance(context: ThemedReactContext): ReactScrollView =
       ReactScrollView(context, fpsListener)
 

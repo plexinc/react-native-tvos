@@ -534,7 +534,8 @@ public class ReactScrollView extends ScrollView
     int maxScrollY = getMaxScrollY();
 
     Integer targetOffset = ReactScrollViewHelper.computeScrollSnapOffset(
-        rect.top, rect.bottom, viewportHeight, alignment, mSnapInterval, mScrollPadding, maxScrollY);
+        rect.top, rect.bottom, viewportHeight, alignment, mSnapInterval, mScrollPadding,
+        getPaddingTop(), maxScrollY);
     if (targetOffset == null) {
       return false;
     }
